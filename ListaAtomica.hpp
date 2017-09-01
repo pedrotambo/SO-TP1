@@ -28,6 +28,10 @@ public:
 
 	void push_front(const T& val) {
 		/* Completar. Debe ser atómico. */
+		Nodo *new_node =  new Nodo(val);
+		do{
+			new_node->_next = _head.load();
+		}while(!std::atomic_compare_exchange_weak(&_head, &new_node->_next, new_node));
 	}
 
 	T& front() const {
