@@ -9,16 +9,31 @@ LDLIBS = -lpthread
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
-BIN = test-2 test-3 test-5
+BIN = test-1 test-2 test-3 test-5
 OBJ = ConcurrentHashMap.o
+
+#ConcurrentHashMap.o: ConcurrentHashMap.hpp
+
 
 all: $(BIN)
 
 $(BIN): ListaAtomica.hpp
 
+
+
+test-1: $(OBJ) test-1.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-1.cpp $(OBJ) $(LDLIBS)
+
+test-1-run: test-1
+	awk -f corpus.awk corpus | sort >corpus-post
+	./test-1 | sort | diff -u - corpus-post
+	rm -f corpus-post
+
+
+
 test-2: $(OBJ) test-2.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-2.cpp $(OBJ) $(LDLIBS)
-	
+
 test-2-run: test-2
 	awk -f corpus.awk corpus | sort >corpus-post
 	./test-2 | sort | diff -u - corpus-post
