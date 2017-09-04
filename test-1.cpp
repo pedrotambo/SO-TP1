@@ -98,5 +98,26 @@ int main(void) {
 			cout << t.first << " " << t.second << endl;
 		}
 	}*/
+
+  cout << "--------------- Creando nueva tabla para testear Count_words(list<string>)-----------" << endl;
+
+  ConcurrentHashMap palabras;
+
+
+  list<string> l;
+  l.push_back("file1");
+  l.push_back("file2");
+  palabras = count_words(l);
+  int i;
+  for (i = 0; i < 26; i++) {
+    for (auto it = palabras.tabla[i]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
+      auto t = it.Siguiente();
+      cout << t.first << " " << t.second << endl;
+    }
+  }
+  pair<string,unsigned int> max = palabras.maximum(26);
+  cout << "<" << max.first << " , " << max.second << ">" << endl;
+
+
 	return 0;
 }

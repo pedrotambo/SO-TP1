@@ -6,6 +6,7 @@
 #include "ListaAtomica.hpp"
 #include "pthread.h"
 #include <fstream>
+#include <list>
 
 using namespace std;
 
@@ -26,7 +27,7 @@ private:
 	pthread_mutex_t _locks[26];
 
 	int hash(string s){
-		return s[0]%26;
+		return s[0] % 97;
 	}
 
 public:
@@ -38,11 +39,12 @@ public:
 	void print_tabla(){
 		cout << "{";
 		for (size_t i = 0; i < 26; i++) {
-			//cout << "{";
+			auto a = tabla[i]->CrearIt();
+			bool hay = false;
 			for (auto it = tabla[i]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
 				cout << " < " <<it.Siguiente().first  <<  " , "<< it.Siguiente().second <<" > " ;
 			}
-			//cout << "}"<< endl;
+			if (hay) cout << "]";
 		}
 		cout << "}"<< endl;
 	}
@@ -74,7 +76,7 @@ public:
 
 	/***********************************************/
 	ConcurrentHashMap& operator= (const ConcurrentHashMap& other){
-		cout << "aca" << endl;
+		//cout << "aca" << endl;
 		for (size_t i = 0; i < 26; i++) {
 			delete tabla[i];
 			tabla[i] = new Lista<Elem>();
@@ -213,7 +215,49 @@ ConcurrentHashMap count_words(string archivo){
  return h;
 }
 
+void * count_words_threads(void * args){
+	
+	pair<string*,ConcurrentHashMap*> input = *((pair<string*,ConcurrentHashMap*> *) args);
+	ConcurrentHashMap *h = input.second;
+	string inputFile = *(input.first);
+	ifstream file(inputFile);
 
+	string word;
+	if (file) {
+		while(getline(file,word)){
+			(*h).addAndInc(word);
+		}
+	}
+	file.close();
+
+	return NULL;
+}
+
+
+
+ConcurrentHashMap count_words(list<string>archs){
+  	ConcurrentHashMap h;
+
+  pthread_t threads[archs.size()];
+  pair<string*,ConcurrentHashMap*> vars[archs.size()];
+
+  int tid = 0;
+  // List no es accesible con [], por eso el iterador.
+  for (auto it = archs.begin(); it != archs.end(); it++){
+  	vars[tid].first = &(*it);
+  	vars[tid].second = &h;
+  	pthread_create(&threads[tid],NULL, count_words_threads, & vars[tid]); //
+  	tid++;	
+  }
+
+
+  for (tid = 0; tid < archs.size(); tid++) {
+    pthread_join(threads[tid],NULL);
+  }
+
+  return h;
+
+}
 
 
 
