@@ -139,5 +139,9 @@ int main(void) {
   pair<string,unsigned int> max_2 = words.maximum(1);
   cout << "<" << max_2.first << " , " << max_2.second << ">" << endl;
 
+  pair<string , unsigned int > m = maximum(2,3,l2);
+  cout << m.first << " " << m.second << endl;
+
+
 	return 0;
 }

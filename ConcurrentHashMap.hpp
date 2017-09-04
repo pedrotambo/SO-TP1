@@ -327,13 +327,48 @@ ConcurrentHashMap count_words(unsigned int n, list<string>archs){
 }
 /***************************************************************************/
 
+struct infoFileVector {
+	infoFileVector(): siguiente(nullptr), words(nullptr),hashMaps(nullptr) {}
+	atomic<int>* siguiente;
+	vector<string> *words;
+	vector<ConcurrentHashMap>* hashMaps;
+};
+
+void * count_words_nthreads_2(void * args){
+
+	infoFileVector inf = *(infoFileVector*) args;
+
+	int next;
+	int last = inf.words->size();
+
+	vector<ConcurrentHashMap> *h = inf.hashMaps;
+
+	while(next = atomic_fetch_add(inf.siguiente,1), next < last){
+    	string archivo = (*inf.words)[next];
+    	ifstream file(archivo);
+		string word;
+		if (file) {
+			while(getline(file,word)){
+				(*h)[next].addAndInc(word);
+			}
+		}
+		file.close();
+	}
+
+	return NULL;
+}
+
+
 pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos, list<string>archs){
 
-	ConcurrentHashMap h;
+
+
+	int n = archs.size();
+	vector<ConcurrentHashMap> hashMaps(n);
 
 	pthread_t threads[p_archivos];
 	int tid;
-	infoFile vars[p_archivos];
+	infoFileVector vars[p_archivos];
 
 
 
@@ -349,15 +384,15 @@ pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos
 	for(tid = 0; tid < p_archivos ; tid++){
 		vars[tid].siguiente = &siguiente;
 		vars[tid].words = &words;
-		vars[tid].context = &h;
-		pthread_create(&threads[tid], NULL, count_words_nthreads, & (vars[tid]));
+		vars[tid].hashMaps = &hashMaps;
+		pthread_create(&threads[tid], NULL, count_words_nthreads_2, & (vars[tid]));
 	}
 
 	for(tid = 0; tid < p_archivos; tid++){
 		pthread_join(threads[tid], NULL);
 	}
 
-	pair<string, unsigned int> max = h.maximum(p_maximos);
+	pair<string, unsigned int> max = hashMaps[0].maximum(p_maximos);
 
 	return max;
 
