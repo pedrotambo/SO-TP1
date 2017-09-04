@@ -217,7 +217,7 @@ ConcurrentHashMap count_words(string archivo){
 }
 
 void * count_words_threads(void * args){
-	
+
 	pair<string*,ConcurrentHashMap*> input = *((pair<string*,ConcurrentHashMap*> *) args);
 	ConcurrentHashMap *h = input.second;
 	string inputFile = *(input.first);
@@ -251,7 +251,7 @@ ConcurrentHashMap count_words(list<string>archs){
   	vars[tid].first = &(*it);
   	vars[tid].second = &h;
   	pthread_create(&threads[tid],NULL, count_words_threads, & vars[tid]); //
-  	tid++;	
+  	tid++;
   }
 
 
@@ -272,7 +272,7 @@ struct infoFile {
 };
 
 void * count_words_nthreads(void * args){
-	
+
 	infoFile inf = *(infoFile*) args;
 
 	int next;
@@ -296,14 +296,14 @@ void * count_words_nthreads(void * args){
 }
 
 ConcurrentHashMap count_words(unsigned int n, list<string>archs){
-  
+
   ConcurrentHashMap h;
 
   pthread_t threads[n];
   int tid;
-  infoFile vars[n];  
-  
-  vector<string> words; 
+  infoFile vars[n];
+
+  vector<string> words;
   for (auto it = archs.begin(); it != archs.end(); it++){
   	string s = *it;
   	words.push_back(s);
@@ -326,5 +326,44 @@ ConcurrentHashMap count_words(unsigned int n, list<string>archs){
 
 }
 /***************************************************************************/
+
+pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos, list<string>archs){
+
+	ConcurrentHashMap h;
+
+	pthread_t threads[p_archivos];
+	int tid;
+	infoFile vars[p_archivos];
+
+
+
+	vector<string> words;
+	for (auto it = archs.begin(); it != archs.end(); it++){
+		string s = *it;
+		words.push_back(s);
+	}
+	atomic<int> siguiente(0);
+
+
+
+	for(tid = 0; tid < p_archivos ; tid++){
+		vars[tid].siguiente = &siguiente;
+		vars[tid].words = &words;
+		vars[tid].context = &h;
+		pthread_create(&threads[tid], NULL, count_words_nthreads, & (vars[tid]));
+	}
+
+	for(tid = 0; tid < p_archivos; tid++){
+		pthread_join(threads[tid], NULL);
+	}
+
+	pair<string, unsigned int> max = h.maximum(p_maximos);
+
+	return max;
+
+}
+
+
+
 
 #endif /* LISTA_ATOMICA_H__ */
