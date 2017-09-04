@@ -7,6 +7,7 @@
 #include "pthread.h"
 #include <fstream>
 #include <list>
+#include <vector>
 
 using namespace std;
 
@@ -199,7 +200,7 @@ public:
 
 };
 
-
+/*****************************************************/
 ConcurrentHashMap count_words(string archivo){
 
 	string word;
@@ -232,9 +233,12 @@ void * count_words_threads(void * args){
 
 	return NULL;
 }
+/********************************************************/
 
 
 
+
+/********************************************************/
 ConcurrentHashMap count_words(list<string>archs){
   	ConcurrentHashMap h;
 
@@ -260,6 +264,67 @@ ConcurrentHashMap count_words(list<string>archs){
 }
 
 
+struct infoFile {
+	infoFile(): siguiente(nullptr), words(nullptr),context(nullptr) {}
+	atomic<int>* siguiente;
+	vector<string> *words;
+	ConcurrentHashMap* context;
+};
 
+void * count_words_nthreads(void * args){
+	
+	infoFile inf = *(infoFile*) args;
+
+	int next;
+	int last = inf.words->size();
+
+	ConcurrentHashMap *h = inf.context;
+
+	while(next = atomic_fetch_add(inf.siguiente,1), next < last){
+    	string archivo = (*inf.words)[next];
+    	ifstream file(archivo);
+		string word;
+		if (file) {
+			while(getline(file,word)){
+				(*h).addAndInc(word);
+			}
+		}
+		file.close();
+	}
+
+	return NULL;
+}
+
+ConcurrentHashMap count_words(unsigned int n, list<string>archs){
+  
+  ConcurrentHashMap h;
+
+  pthread_t threads[n];
+  int tid;
+  infoFile vars[n];  
+  
+  vector<string> words; 
+  for (auto it = archs.begin(); it != archs.end(); it++){
+  	string s = *it;
+  	words.push_back(s);
+  }
+  atomic<int> siguiente(0);
+
+
+  for(tid = 0; tid < n; tid++){
+  	vars[tid].siguiente = &siguiente;
+  	vars[tid].words = &words;
+  	vars[tid].context = &h;
+  	pthread_create(&threads[tid], NULL, count_words_nthreads, & (vars[tid]));
+  }
+
+  for(tid = 0; tid < n; tid++){
+  	pthread_join(threads[tid], NULL);
+  }
+
+  return h;
+
+}
+/***************************************************************************/
 
 #endif /* LISTA_ATOMICA_H__ */

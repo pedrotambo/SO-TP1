@@ -118,6 +118,26 @@ int main(void) {
   pair<string,unsigned int> max = palabras.maximum(26);
   cout << "<" << max.first << " , " << max.second << ">" << endl;
 
+  cout << "-----------------Creando nueva tabla para testear Count_words(n, list<string>)-----------" << endl;
+
+  ConcurrentHashMap words;
+  list<string> l2;
+  l2.push_back("file1");
+  l2.push_back("file2");
+  l2.push_back("file3");
+  l2.push_back("file4");
+
+  unsigned int k = 2;
+  words = count_words(k,l2);
+  for (i = 0; i < 26; i++) {
+    for (auto it = words.tabla[i]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
+      auto t = it.Siguiente();
+      cout << t.first << " " << t.second << endl;
+    }
+  }
+
+  pair<string,unsigned int> max_2 = words.maximum(1);
+  cout << "<" << max_2.first << " , " << max_2.second << ">" << endl;
 
 	return 0;
 }
