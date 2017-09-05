@@ -326,10 +326,6 @@ ConcurrentHashMap count_words(unsigned int n, list<string>archs){
 
 }
 /***************************************************************************/
-/***************************************************************************/
-
-/***************************************************************************/
-/***************************************************************************/
 
 struct infoFileVector {
 	infoFileVector(): siguiente(nullptr), words(nullptr),hashMaps(nullptr) {}
@@ -337,16 +333,6 @@ struct infoFileVector {
 	vector<string> *words;
 	vector<ConcurrentHashMap>* hashMaps;
 };
-
-
-struct infoThreadTables {
-	infoThreadTables(): siguiente(nullptr),max(nullptr),hashMaps(nullptr) {}
-	atomic<int>* siguiente;
-	atomic<Elem* > * max;
-	vector<ConcurrentHashMap>* hashMaps;
-};
-
-
 
 void * count_words_nthreads_2(void * args){
 
@@ -358,7 +344,6 @@ void * count_words_nthreads_2(void * args){
 	vector<ConcurrentHashMap> *h = inf.hashMaps;
 
 	while(next = atomic_fetch_add(inf.siguiente,1), next < last){
-		/* Hay archivos para recorrer */
     	string archivo = (*inf.words)[next];
     	ifstream file(archivo);
 		string word;
@@ -374,47 +359,41 @@ void * count_words_nthreads_2(void * args){
 }
 
 
-void * maxThrMultipleTables(void * args){
-
-	/* Se van a recorrer las entradas de las tablas en secuencia donde
-	 * si tenemos T tablas el numero de entradas en las tablas sera 26*T.
-	 * La tabla a recorrer corresponde al cociente de la division entre
-	 * la variable Siguiente y T y la proxima entrada se corresponde con
-	 * el resto de la division entera entre esos valores.
-	 */
 
 
-	infoThreadTables* inf = (infoThreadTables*) args;
+struct infoFileFind {
+	infoFileFind(): row(nullptr), hashMaps(nullptr), hashMapGral(nullptr) {}
+	atomic<int>* row;
+	vector<ConcurrentHashMap>* hashMaps;
+	ConcurrentHashMap* hashMapGral;
+};
+
+void * count_row(void * args){
+	infoFileFind inf = *(infoFileFind*) args;
+
 	int next;
+	vector<ConcurrentHashMap> *h = inf.hashMaps;
+	ConcurrentHashMap *hGral = inf.hashMapGral;
 
-	while(next = atomic_fetch_add(inf->siguiente,1), next  < 26*inf->hashMaps->size() ){
-		/* Vamos a la proxima entrada de la tabla para recorrer. */
-		int tabla = next / 26;
-		int bucket =  next % 26;
-
-		for (auto it = ((*inf->hashMaps)[tabla]).tabla[bucket]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
-			Elem* m;
-			do {
-				m =  (* (inf->max)).load();
-				if( m == NULL || it.Siguiente().second > m->second ){
-					atomic_compare_exchange_weak(inf->max, &m , &it.Siguiente());
-				 }
-			} while( it.Siguiente().second > ((*inf->max).load())->second );
+	while(next = atomic_fetch_add(inf.row, 1), next < 26){
+		int i;
+		for (i = 0; i < h->size(); i++){
+			auto it = (*h)[i].tabla[next]->CrearIt();
+			for(auto it = (*h)[i].tabla[next]->CrearIt(); it.HaySiguiente(); it.Avanzar()){
+				string key = it.Siguiente().first;
+				int j;
+				for (j = 0; j < it.Siguiente().second; j++) (*hGral).addAndInc(key);
+			}
 		}
 	}
-	/* Si no quedan mas entradas de las tablas para reccorer terminamos. */
+
 	return NULL;
 }
 
 
-
-
-
-
-
 pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos, list<string>archs){
 
-	/** Procesamos los archivos **/
+
 
 	int n = archs.size();
 	vector<ConcurrentHashMap> hashMaps(n);
@@ -423,12 +402,16 @@ pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos
 	int tid;
 	infoFileVector vars[p_archivos];
 
+
+
 	vector<string> words;
 	for (auto it = archs.begin(); it != archs.end(); it++){
 		string s = *it;
 		words.push_back(s);
 	}
 	atomic<int> siguiente(0);
+
+
 
 	for(tid = 0; tid < p_archivos ; tid++){
 		vars[tid].siguiente = &siguiente;
@@ -441,44 +424,26 @@ pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos
 		pthread_join(threads[tid], NULL);
 	}
 
+	p_maximos = (p_maximos > 26)? 26 : p_maximos;
+	pthread_t threads_find[p_maximos];
+	infoFileFind vars2[p_maximos];
+	atomic<int> row(0);
+	ConcurrentHashMap hashMapGral;
 
-
-	/** Ahora vamos a calcular los maximos **/
-
-	for (size_t i = 0; i < hashMaps.size(); i++) {
-
-		/* La tablas no son disjuntas !! */
-		hashMaps[i].print_tabla();
+	for(tid = 0; tid < p_maximos; tid++){
+		vars2[tid].row =&row;
+		vars2[tid].hashMaps = &hashMaps;
+		vars2[tid].hashMapGral = &hashMapGral;
+		pthread_create(&threads_find[tid], NULL, count_row, & (vars2[tid]));
 	}
 
-
-
-
-	siguiente.store(0); // volvemos a setear siguiente en 0
-	//atomic<int> siguiente(0);
-	atomic<Elem *> maximo(nullptr);
-	pthread_t threads_Maximum[p_maximos];
-	tid = 0;
-	infoThreadTables vars_Maximum[p_maximos];
-
-
-	/* Inizializamos los threads */
-	for (size_t tid = 0; tid < p_maximos; tid++) {
-		vars_Maximum[tid].siguiente = &siguiente;
-		vars_Maximum[tid].max = &maximo;
-		vars_Maximum[tid].hashMaps = &hashMaps;
-		pthread_create(&threads_Maximum[tid],NULL,&maxThrMultipleTables,& (vars_Maximum[tid]) );
+	for(tid = 0; tid < p_maximos; tid++){
+		pthread_join(threads_find[tid], NULL);
 	}
 
-	/* Joineamos los threads */
-	for (size_t tid = 0; tid < p_maximos; tid++) pthread_join(threads_Maximum[tid],NULL);
+	pair<string, unsigned int> max = hashMapGral.maximum(p_maximos);
 
-	cout << "ok" << endl;
-
-
-	pair<string,unsigned int> res = make_pair(maximo.load()->first,maximo.load()->second);
-
-	return res;
+	return max;
 
 }
 

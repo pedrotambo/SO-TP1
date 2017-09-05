@@ -60,11 +60,6 @@ int main(void) {
     pthread_create(&threads[150+tid],NULL,add3,&h2);
   }
 
-
-
-
-
-
   h.print_tabla();
   h2.print_tabla();
   pair<string,unsigned int> s = h.maximum(10);
@@ -84,20 +79,6 @@ int main(void) {
   }
   h.print_tabla();
   h2.print_tabla();
-  //s = h.maximum(10);
-  //cout << "<" << s.first << " , " << s.second << ">" << endl;
-
-/*
-	ConcurrentHashMap h;
-	int i;
-
-	h = count_words("corpus");
-	for (i = 0; i < 26; i++) {
-		for (auto it = h.tabla[i]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
-			auto t = it.Siguiente();
-			cout << t.first << " " << t.second << endl;
-		}
-	}*/
 
   cout << "--------------- Creando nueva tabla para testear Count_words(list<string>)-----------" << endl;
 
@@ -107,6 +88,9 @@ int main(void) {
   list<string> l;
   l.push_back("file1");
   l.push_back("file2");
+  l.push_back("file3");
+  l.push_back("file4");
+
   palabras = count_words(l);
   int i;
   for (i = 0; i < 26; i++) {
@@ -136,11 +120,8 @@ int main(void) {
     }
   }
 
-  pair<string,unsigned int> max_2 = words.maximum(1);
-  cout << "<" << max_2.first << " , " << max_2.second << ">" << endl;
-
-  pair<string , unsigned int > m = maximum(2,3,l2);
-  cout << m.first << " " << m.second << endl;
+  pair<string , unsigned int > m = maximum(2,2,l2);
+  cout << "<" << m.first << " " << m.second << ">" << endl;
 
 
 	return 0;
