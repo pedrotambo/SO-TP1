@@ -1,0 +1,15 @@
+
+si hay un solo archivo, tardarian lo mismo... etc (JUAB)
+count_words_nc vs c vs ct con un archivo
+
+count_words NC -> no estaria en grafico (uso archs con un loop y sumo tiempos)
+count_words_c VS count_words_ct variando threads con multiples archivos
+
+maximum vs maximum cw_c vs maximum cw_ct variando threads, con archivos multiples
+
+
+casos de archivos interesantes:
+	-todas las palabras distintas (mal caso, mucho mutex)
+	-el mismo archivo muchas veces (muchas palabras iguales, como arriba, reemplazable el de arriba?)
+	-esparso
+	-muchas palabras que empiezen con una misma letra, y el resto no, en varios archivos (una fila esté muy llena)
