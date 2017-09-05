@@ -8,6 +8,7 @@
 #include <fstream>
 #include <list>
 #include <vector>
+#include <iostream>
 
 using namespace std;
 
@@ -64,7 +65,6 @@ public:
 	/**********Constructor por copia *************/
 
 	ConcurrentHashMap (const ConcurrentHashMap& other){
-		cout << "aca" << endl;
 		for (size_t i = 0; i < 26; i++) {
 
 			delete tabla[i];
@@ -77,7 +77,6 @@ public:
 
 	/***********************************************/
 	ConcurrentHashMap& operator= (const ConcurrentHashMap& other){
-		//cout << "aca" << endl;
 		for (size_t i = 0; i < 26; i++) {
 			delete tabla[i];
 			tabla[i] = new Lista<Elem>();
@@ -208,7 +207,6 @@ ConcurrentHashMap count_words(string archivo){
 	ConcurrentHashMap h;
 	if (file) {
 	 while (getline(file,word)) {
-		 cout << word << endl;
 		 h.addAndInc(word);
 	 }
 	 file.close();
@@ -445,6 +443,20 @@ pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos
 
 	return max;
 
+}
+
+
+pair<string, unsigned int>maximum2(unsigned int p_archivos,unsigned int p_maximos, list<string>archs){
+	ConcurrentHashMap h = count_words(archs);
+	pair<string, unsigned int> max = h.maximum(p_maximos);
+	return max;	
+}
+
+
+pair<string, unsigned int>maximum3(unsigned int p_archivos,unsigned int p_maximos, list<string>archs){
+	ConcurrentHashMap h = count_words(p_archivos, archs);
+	pair<string, unsigned int> max = h.maximum(p_maximos);
+	return max;	
 }
 
 

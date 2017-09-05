@@ -9,7 +9,7 @@ LDLIBS = -lpthread
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
-BIN = test-1 test-2 test-3 test-5
+BIN = test-1 test-2 test-3 test-5 test-6
 OBJ = ConcurrentHashMap.o
 
 #ConcurrentHashMap.o: ConcurrentHashMap.hpp
@@ -48,6 +48,7 @@ test-3-run: test-3
 	for i in 0 1 2 3 4; do ./test-3 $$((i + 1)) | sort | diff -u - corpus-post; done
 	rm -f corpus-post corpus-[0-4]
 
+
 test-5: $(OBJ) test-5.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-5.cpp $(OBJ) $(LDLIBS)
 
@@ -59,6 +60,15 @@ test-5-run: test-5
 		./test-5 $$((i + 1)) $$((j + 1)) | diff -u - corpus-max; \
 	done; done
 	rm -f corpus-max corpus-[0-4]
+
+test-6: $(OBJ) test-6.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-6.cpp $(OBJ) $(LDLIBS)
+
+test-6-run: test-6
+	awk -f corpus.awk corpus | sort >corpus-post
+	./test-6 | sort | diff -u - corpus-post
+	rm -f corpus-post
+
 
 clean:
 	rm -f $(BIN) $(OBJ)
