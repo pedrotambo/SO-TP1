@@ -30,6 +30,12 @@ int main(int argc, char** argv){
 
     string funcion = argv[1];
     
+    if(funcion != "count_words_c"){
+        if (argv[2] == "1"){
+            cout << "tiempo" << "," << "threads" << endl;
+        }
+    }
+
     if(funcion == "count_words_nc"){
 
         string arch = argv[2];
@@ -98,7 +104,10 @@ int main(int argc, char** argv){
 
     time_span = std::chrono::duration_cast<std::chrono::duration<double> >(t2-t1);
             
-    cout << time_span.count() << endl;
+    cout << time_span.count();
+    if(funcion == "count_words_c"){cout << "," << 16;}//nos metimos con 16 corpus en los experimentos
+    else { cout << "," << argv[2];}
+    cout << endl;
 
     return 0;
 }
