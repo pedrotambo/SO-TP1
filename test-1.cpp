@@ -123,6 +123,14 @@ int main(void) {
   pair<string , unsigned int > m = maximum(2,2,l2);
   cout << "<" << m.first << " " << m.second << ">" << endl;
 
+  ConcurrentHashMap vacio;
+  ConcurrentHashMap h3 = vacio;
+
+  h3.print_tabla();
+
+  h3 = palabras;
+
+  h3.print_tabla();
 
 	return 0;
 }

@@ -16,9 +16,7 @@ void ConcurrentHashMap::print_tabla(){
 	cout << "}"<< endl;
 }
 
-
-
-/***************** Constructor *****************/
+/************************************** Constructor *******************************************/
 ConcurrentHashMap::ConcurrentHashMap(){
 	/* Inizializamos la tabla y los mutex */
 	for (size_t i = 0; i < 26; i++) {
@@ -27,7 +25,7 @@ ConcurrentHashMap::ConcurrentHashMap(){
 	}
 }
 
-/**********Constructor por copia *************/
+/************************************Constructor por copia ***********************************/
 ConcurrentHashMap::ConcurrentHashMap (const ConcurrentHashMap& other){
 	for (size_t i = 0; i < 26; i++) {
 		tabla[i] = new Lista<Elem>();
@@ -37,11 +35,11 @@ ConcurrentHashMap::ConcurrentHashMap (const ConcurrentHashMap& other){
 	}
 }
 
-/***********************************************/
+/**********************************************************************************************/
 ConcurrentHashMap& ConcurrentHashMap::operator= (const ConcurrentHashMap& other){
 	for (size_t i = 0; i < 26; i++) {
-		//delete tabla[i];
-		//tabla[i] = new Lista<Elem>();
+		delete tabla[i];
+		tabla[i] = new Lista<Elem>();
 		for (auto it = other.tabla[i]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
 			tabla[i]->push_front(make_pair(it.Siguiente().first,it.Siguiente().second));
 		}
@@ -49,15 +47,15 @@ ConcurrentHashMap& ConcurrentHashMap::operator= (const ConcurrentHashMap& other)
 	return *this;
 }
 
-
-/*************** Destructor ********************/
+/**************************************** Destructor ******************************************/
 ConcurrentHashMap::~ConcurrentHashMap(){
 	for (size_t i = 0; i < 26; i++) {
 		delete tabla[i];
 		pthread_mutex_destroy(&_locks[i]);
 	}
 }
-/****************** addAndInc *******************/
+
+/**************************************** addAndInc *******************************************/
 void ConcurrentHashMap::addAndInc(string key){
 	int h = hash(key);
 	/* Agregarmos la clave a la lista si no esta */
@@ -78,21 +76,20 @@ void ConcurrentHashMap::addAndInc(string key){
 		}
 	}
 }
-/****************** memeber **********************/
+/**************************************** memeber *********************************************/
 bool ConcurrentHashMap::member(string key){
 	for (auto it = tabla[hash(key)]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
 		if (it.Siguiente().first == key) return true;
 	}
 	return false;
 }
-/**************************************************/
-/*************************************************/
-//static void* ConcurrentHashMap::maxThrWrapper(void * args)
+
+/**********************************************************************************************/
+/* maxThrWrapper y maxThr funciones que usa cada threada para calcular el máximo de un hashmap*/
 void* ConcurrentHashMap::maxThrWrapper(void * args){
 	infoThread * info = (infoThread *) args ;
 	return info->context->maxThr(info);
 }
-
 void * ConcurrentHashMap::maxThr(void * args){
 	infoThread* inf = (infoThread*) args;
 	int next;
@@ -103,6 +100,7 @@ void * ConcurrentHashMap::maxThr(void * args){
 			do {
 				m =  (* (inf->max)).load();
 				if( m == NULL || it.Siguiente().second > m->second ){
+					// Actualizo el máximo
 					atomic_compare_exchange_weak(inf->max, &m , &it.Siguiente());
 				 }
 			} while( it.Siguiente().second > ((*inf->max).load())->second );
@@ -111,8 +109,7 @@ void * ConcurrentHashMap::maxThr(void * args){
 	/* Si no quedan mas entradas de la tabla para reccorer terminamos. */
 	return NULL;
 }
-
-/************************************************/
+/************************************ maximum *************************************************/
 pair<string,unsigned int> ConcurrentHashMap::maximum(unsigned int nt){
 	atomic<int> siguiente(0);
 	atomic<Elem *> maximo(nullptr);
@@ -134,25 +131,28 @@ pair<string,unsigned int> ConcurrentHashMap::maximum(unsigned int nt){
 	for (size_t i = 0; i < 26; i++) pthread_mutex_unlock(& _locks[i]);
 	return res;
 }
+/******************************** END class functions******************************************/
+/**********************************************************************************************/
+/**********************************************************************************************/
 
-/************* Fin class functions********************/
-
-
-/*****************************************************/
+/************************EJ 2.2 versión NO concurrente del count_words ************************/
 ConcurrentHashMap count_words(string archivo){
 
 	string word;
+	// Abrimos el archivo
 	ifstream file(archivo);
 	ConcurrentHashMap h;
 	if (file) {
 	 while (getline(file,word)) {
-		 h.addAndInc(word);
+	 	// Agregamos cada palabra al hashsmap
+	 	h.addAndInc(word);
 	 }
 	 file.close();
  }
  return h;
 }
 
+/*********** función que utilizarán los threads para la versión concurrent count_words 2.3*****/
 void * count_words_threads(void * args){
 
 	pair<string*,ConcurrentHashMap*> input = *((pair<string*,ConcurrentHashMap*> *) args);
@@ -170,36 +170,31 @@ void * count_words_threads(void * args){
 
 	return NULL;
 }
-/********************************************************/
-
-
-
-
-/********************************************************/
+/************************EJ 2.3 versión concurrente del count_words ***************************/
 ConcurrentHashMap count_words(list<string>archs){
   	ConcurrentHashMap h;
 
-  pthread_t threads[archs.size()];
-  pair<string*,ConcurrentHashMap*> vars[archs.size()];
+  	// Se crea un thread por cada archivo.
+  	pthread_t threads[archs.size()];
+  	pair<string*,ConcurrentHashMap*> vars[archs.size()];
 
-  int tid = 0;
-  // List no es accesible con [], por eso el iterador.
-  for (auto it = archs.begin(); it != archs.end(); it++){
-  	vars[tid].first = &(*it);
-  	vars[tid].second = &h;
-  	pthread_create(&threads[tid],NULL, count_words_threads, & vars[tid]); //
-  	tid++;
-  }
+  	int tid = 0;
+  	// List no es accesible con [], por eso el iterador.
+  	for (auto it = archs.begin(); it != archs.end(); it++){
+  		vars[tid].first = &(*it);
+  		vars[tid].second = &h;
+  		pthread_create(&threads[tid],NULL, count_words_threads, & vars[tid]); //
+  		tid++;
+  	}
 
+  	for (tid = 0; tid < archs.size(); tid++) {
+    	pthread_join(threads[tid],NULL);
+  	}
 
-  for (tid = 0; tid < archs.size(); tid++) {
-    pthread_join(threads[tid],NULL);
-  }
-
-  return h;
-
+  	return h;
 }
 
+/********* función que utilizarán los n threads para la versión concurrente count_words 2.4****/
 void * count_words_nthreads(void * args){
 
 	infoFile inf = *(infoFile*) args;
@@ -223,7 +218,7 @@ void * count_words_nthreads(void * args){
 
 	return NULL;
 }
-
+/**********************EJ 2.4 versión concurrente del count_words con n threads****************/
 ConcurrentHashMap count_words(unsigned int n, list<string>archs){
 
   ConcurrentHashMap h;
@@ -254,9 +249,11 @@ ConcurrentHashMap count_words(unsigned int n, list<string>archs){
   return h;
 
 }
-/***************************************************************************/
+/*********************************************************************************************/
 
 
+
+/**** función que utilizarán los p_archivos threads para leer los archivos (ej 2.5) **********/
 void * count_words_nthreads_2(void * args){
 
 	infoFileVector inf = *(infoFileVector*) args;
@@ -281,7 +278,7 @@ void * count_words_nthreads_2(void * args){
 	return NULL;
 }
 
-
+/**** función que utilizarán los p_máximos threads para calcular el máximo(ej 2.5) **********/
 void * count_row(void * args){
 	infoFileFind inf = *(infoFileFind*) args;
 
@@ -304,11 +301,12 @@ void * count_row(void * args){
 	return NULL;
 }
 
+/*************************EJ 2.5 versión concurrente del count_words ************************/
 
 pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos, list<string>archs){
 
 
-
+	// Primero con los p_archivos threads se crean un hashsmap por cada archivo
 	int n = archs.size();
 	vector<ConcurrentHashMap> hashMaps(n);
 
@@ -316,16 +314,13 @@ pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos
 	int tid;
 	infoFileVector vars[p_archivos];
 
-
-
 	vector<string> words;
 	for (auto it = archs.begin(); it != archs.end(); it++){
 		string s = *it;
 		words.push_back(s);
 	}
+
 	atomic<int> siguiente(0);
-
-
 
 	for(tid = 0; tid < p_archivos ; tid++){
 		vars[tid].siguiente = &siguiente;
@@ -338,6 +333,9 @@ pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos
 		pthread_join(threads[tid], NULL);
 	}
 
+
+
+	// Luego con p_maximos threads cada uno irá construyendo de a una fila el hashmap general
 	p_maximos = (p_maximos > 26)? 26 : p_maximos;
 	pthread_t threads_find[p_maximos];
 	infoFileFind vars2[p_maximos];
@@ -361,7 +359,7 @@ pair<string, unsigned int>maximum(unsigned int p_archivos,unsigned int p_maximos
 
 }
 
-
+/*****************EJ 2.6 versiones alternativas de maximum utilizando count_words **************/
 pair<string, unsigned int>maximum2(unsigned int p_archivos,unsigned int p_maximos, list<string>archs){
 	ConcurrentHashMap h = count_words(archs);
 	pair<string, unsigned int> max = h.maximum(p_maximos);
@@ -374,5 +372,5 @@ pair<string, unsigned int>maximum3(unsigned int p_archivos,unsigned int p_maximo
 	pair<string, unsigned int> max = h.maximum(p_maximos);
 	return max;	
 }
-
+/************************************************************************************************/
 
