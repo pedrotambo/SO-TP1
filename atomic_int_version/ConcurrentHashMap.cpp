@@ -32,7 +32,11 @@ ConcurrentHashMap::ConcurrentHashMap (const ConcurrentHashMap& other){
 	for (size_t i = 0; i < 26; i++) {
 		tabla[i] = new Lista<Elem>();
 		for (auto it = other.tabla[i]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
-			tabla[i]->push_front(make_pair(it.Siguiente().first,it.Siguiente().second));
+			Elem e;
+			e.first = it.Siguiente().first;
+			int k = it.Siguiente().second;
+			e.second.store(k);
+			tabla[i]->push_front(e);
 		}
 	}
 }
@@ -40,10 +44,15 @@ ConcurrentHashMap::ConcurrentHashMap (const ConcurrentHashMap& other){
 /***********************************************/
 ConcurrentHashMap& ConcurrentHashMap::operator= (const ConcurrentHashMap& other){
 	for (size_t i = 0; i < 26; i++) {
-		//delete tabla[i];
-		//tabla[i] = new Lista<Elem>();
+		Lista<Elem> *del = tabla[i];
+		tabla[i] = new Lista<Elem>();
+		delete del;
 		for (auto it = other.tabla[i]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
-			tabla[i]->push_front(make_pair(it.Siguiente().first,it.Siguiente().second));
+			Elem e;
+			e.first = it.Siguiente().first;
+			int k = it.Siguiente().second;
+			e.second.store(k);
+			tabla[i]->push_front(e);
 		}
 	}
 	return *this;
@@ -53,7 +62,7 @@ ConcurrentHashMap& ConcurrentHashMap::operator= (const ConcurrentHashMap& other)
 /*************** Destructor ********************/
 ConcurrentHashMap::~ConcurrentHashMap(){
 	for (size_t i = 0; i < 26; i++) {
-		delete tabla[i];
+		if(tabla[i] != nullptr)	delete tabla[i];
 		pthread_mutex_destroy(&_locks[i]);
 	}
 }
@@ -64,16 +73,17 @@ void ConcurrentHashMap::addAndInc(string key){
 	while (!member(key)){
 		pthread_mutex_lock(& _locks[h]);
 		if(!member(key)) {
-			tabla[h]->push_front(make_pair(key,0));
+			Elem zero;
+			zero.first = key;
+			zero.second.store(0);
+			tabla[h]->push_front(zero);
 		}
 		pthread_mutex_unlock(& _locks[h]);
 	}
 	/* Incrementamos su valor */
 	for (auto it = tabla[h]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
 		if (it.Siguiente().first == key) {
-			pthread_mutex_lock(& _locks[h]);
 			it.Siguiente().second++;
-			pthread_mutex_unlock(& _locks[h]);
 			break;
 		}
 	}
@@ -129,9 +139,15 @@ pair<string,unsigned int> ConcurrentHashMap::maximum(unsigned int nt){
 	}
 	/* Joineamos los threads */
 	for (size_t tid = 0; tid < nt; tid++) pthread_join(threads[tid],NULL);
-	pair<string,unsigned int> res = make_pair(maximo.load()->first,maximo.load()->second);
+	//pair<string,unsigned int> res = make_pair(maximo.load()->first,maximo.load()->second);
 	/* Desbloqueamos los mutex de cada entrada de la tabla */
 	for (size_t i = 0; i < 26; i++) pthread_mutex_unlock(& _locks[i]);
+	
+	Elem* max = maximo.load();
+	string key = max->first;
+	int k = max->second;
+	atomic_int cant(k);
+	pair<string, unsigned int> res = make_pair(key,k);
 	return res;
 }
 
