@@ -15,24 +15,29 @@ import subprocess
 
 #creo las rutas de archivos a pasarles
 archivosExp1 = ''
-for file in sorted(os.listdir('./exp1')):
-	if not('test' in file or 'resultados' in file):
+for file in sorted(os.listdir('./')):
+	if not('test' in file or 'resultados' in file or 'py' in file):
 		archivosExp1 = archivosExp1 + ' ' + str(file)
 
 
 #corro los tests, puse una copia del ejecutable en cada expi para que pueda ejecutar la lista de archivos facilmente
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'count_words_c '+str(i)+archivosExp1+' >> ./resultados/count_words_c_Exp1.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'count_words_c '+str(i)+archivosExp1+' >> ./resultados/count_words_c/Exp1_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'count_words_ct '+str(i)+archivosExp1+' >> ./resultados/count_words_ct_Exp1.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'count_words_ct '+str(i)+archivosExp1+' >> ./resultados/count_words_ct/Exp1_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'maximum '+str(i)+' '+str(i)+archivosExp1+' >> ./resultados/maximum_Exp1.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'maximum '+str(i)+' '+str(i)+archivosExp1+' >> ./resultados/maximum/Exp1_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'maximum_cw_c '+str(i)+' '+str(i)+archivosExp1+' >> ./resultados/maximum_cw_c_Exp1.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'maximum_cw_c '+str(i)+' '+str(i)+archivosExp1+' >> ./resultados/maximum_cw_c/Exp1_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'maximum_cw_ct '+str(i)+' '+str(i)+archivosExp1+' >> ./resultados/maximum_cw_ct_Exp1.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'maximum_cw_ct '+str(i)+' '+str(i)+archivosExp1+' >> ./resultados/maximum_cw_ct/Exp1_'+str(j)+'.csv'],shell = True)

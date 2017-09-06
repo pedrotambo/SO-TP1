@@ -20,16 +20,21 @@ for _ in range(0,16):
 	archivosExp2 = archivosExp2 + ' ' + 'corpus'
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'count_words_c '+str(i)+archivosExp2+'  >> ./resultados/count_words_c_Exp2.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'count_words_c '+str(i)+archivosExp2+'  >> ./resultados/count_words_c/Exp2_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'count_words_ct '+str(i)+archivosExp2+'  >> ./resultados/count_words_ct_Exp2.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'count_words_ct '+str(i)+archivosExp2+'  >> ./resultados/count_words_ct/Exp2_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'maximum '+str(i)+' '+str(i)+archivosExp2+'  >> ./resultados/maximum_Exp2.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'maximum '+str(i)+' '+str(i)+archivosExp2+'  >> ./resultados/maximum/Exp2_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'maximum_cw_c '+str(i)+' '+str(i)+archivosExp2+'  >> ./resultados/maximum_cw_c_Exp2.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'maximum_cw_c '+str(i)+' '+str(i)+archivosExp2+'  >> ./resultados/maximum_cw_c/Exp2_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'maximum_cw_ct '+str(i)+' '+str(i)+archivosExp2+'  >> ./resultados/maximum_cw_ct_Exp2.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'maximum_cw_ct '+str(i)+' '+str(i)+archivosExp2+'  >> ./resultados/maximum_cw_ct/Exp2_'+str(j)+'.csv'],shell = True)

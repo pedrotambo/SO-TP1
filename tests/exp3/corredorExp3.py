@@ -17,20 +17,25 @@ import subprocess
 
 archivosExp3 = ''
 for file in sorted(os.listdir('./exp3')):
-	if not('test' in file or 'resultados' in file):
+	if not('test' in file or 'resultados' in file or 'py' in file):
 		archivosExp3 = archivosExp3 + ' ' + str(file)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'count_words_c '+str(i)+archivosExp3+'  >> ./resultados/count_words_c_Exp3.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'count_words_c '+str(i)+archivosExp3+'  >> ./resultados/count_words_c_Exp3_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'count_words_ct '+str(i)+archivosExp3+'  >> ./resultados/count_words_ct_Exp3.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'count_words_ct '+str(i)+archivosExp3+'  >> ./resultados/count_words_ct_Exp3_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'maximum '+str(i)+' '+str(i)+archivosExp3+'  >> ./resultados/maximum_Exp3.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'maximum '+str(i)+' '+str(i)+archivosExp3+'  >> ./resultados/maximum_Exp3_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'maximum_cw_c '+str(i)+' '+str(i)+archivosExp3+'  >> ./resultados/maximum_cw_c_Exp3.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'maximum_cw_c '+str(i)+' '+str(i)+archivosExp3+'  >> ./resultados/maximum_cw_c_Exp3_'+str(j)+'.csv'],shell = True)
 
 for i in range(1,16+1):
-	subprocess.call(['./test-6 '+'maximum_cw_ct '+str(i)+' '+str(i)+archivosExp3+'  >> ./resultados/maximum_cw_ct_Exp3.csv'],shell = True)
+	for j in range(1,10+1):
+		subprocess.call(['./test-6 '+'maximum_cw_ct '+str(i)+' '+str(i)+archivosExp3+'  >> ./resultados/maximum_cw_ct_Exp3_'+str(j)+'.csv'],shell = True)
