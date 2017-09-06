@@ -30,7 +30,6 @@ ConcurrentHashMap::ConcurrentHashMap(){
 /**********Constructor por copia *************/
 ConcurrentHashMap::ConcurrentHashMap (const ConcurrentHashMap& other){
 	for (size_t i = 0; i < 26; i++) {
-		delete tabla[i];
 		tabla[i] = new Lista<Elem>();
 		for (auto it = other.tabla[i]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
 			tabla[i]->push_front(make_pair(it.Siguiente().first,it.Siguiente().second));
@@ -41,8 +40,8 @@ ConcurrentHashMap::ConcurrentHashMap (const ConcurrentHashMap& other){
 /***********************************************/
 ConcurrentHashMap& ConcurrentHashMap::operator= (const ConcurrentHashMap& other){
 	for (size_t i = 0; i < 26; i++) {
-		delete tabla[i];
-		tabla[i] = new Lista<Elem>();
+		//delete tabla[i];
+		//tabla[i] = new Lista<Elem>();
 		for (auto it = other.tabla[i]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
 			tabla[i]->push_front(make_pair(it.Siguiente().first,it.Siguiente().second));
 		}
