@@ -9,7 +9,7 @@ LDLIBS = -lpthread
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
-BIN = test-1 test-2 test-3 test-5 test-6
+BIN = test-2 test-3 test-5 interfaz test-ejs
 OBJ = ConcurrentHashMap.o
 
 #ConcurrentHashMap.o: ConcurrentHashMap.hpp
@@ -19,6 +19,8 @@ all: $(BIN)
 
 $(BIN): ListaAtomica.hpp
 
+test-ejs: $(OBJ) test-ejs.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-ejs.cpp $(OBJ) $(LDLIBS)
 
 
 test-1: $(OBJ) test-1.cpp
@@ -61,12 +63,12 @@ test-5-run: test-5
 	done; done
 	rm -f corpus-max corpus-[0-4]
 
-test-6: $(OBJ) test-6.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-6.cpp $(OBJ) $(LDLIBS)
+interfaz: $(OBJ) interfaz.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ interfaz.cpp $(OBJ) $(LDLIBS)
 
-test-6-run: test-6
+interfaz-run: interfaz
 	awk -f corpus.awk corpus | sort >corpus-post
-	./test-6 | sort | diff -u - corpus-post
+	./interfaz | sort | diff -u - corpus-post
 	rm -f corpus-post
 
 
